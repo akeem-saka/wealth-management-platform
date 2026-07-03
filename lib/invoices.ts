@@ -1,15 +1,15 @@
-import { readJsonFile, writeJsonFile } from "@/lib/json-store"
-
-const FILE = "paid-invoices.json"
+import { getDb } from "@/lib/db"
 
 export async function listPaidInvoiceIds(): Promise<string[]> {
-  return readJsonFile<string>(FILE)
+  const sql = await getDb()
+  const rows = await sql`SELECT invoice_id FROM paid_invoices`
+  return rows.map((r) => r.invoice_id as string)
 }
 
 export async function markInvoicePaid(invoiceId: string): Promise<void> {
-  const paid = await listPaidInvoiceIds()
-  if (!paid.includes(invoiceId)) {
-    paid.push(invoiceId)
-    await writeJsonFile(FILE, paid)
-  }
+  const sql = await getDb()
+  await sql`
+    INSERT INTO paid_invoices (invoice_id) VALUES (${invoiceId})
+    ON CONFLICT (invoice_id) DO NOTHING
+  `
 }
