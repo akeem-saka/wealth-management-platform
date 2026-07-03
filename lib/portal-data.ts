@@ -68,6 +68,21 @@ export const documents = [
   { name: "2025 Tax Summary (1099)", type: "Tax", date: "Feb 10, 2026", size: "1.8 MB" },
 ]
 
+export const invoices = [
+  {
+    id: "INV-2026-Q2",
+    description: "Q2 2026 Advisory Fee (0.85% AUM, annualized)",
+    amount: 12_450,
+    dueDate: "Jul 15, 2026",
+  },
+  {
+    id: "INV-2026-Q1",
+    description: "Q1 2026 Advisory Fee (0.85% AUM, annualized)",
+    amount: 11_980,
+    dueDate: "Apr 15, 2026",
+  },
+]
+
 export function formatCurrency(value: number, fractionDigits = 0) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

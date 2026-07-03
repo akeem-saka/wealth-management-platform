@@ -9,7 +9,12 @@ __v0_jsx-dev-runtime.ts
 # Environment variables
 .env*.local
 
+# Locally stored lead submissions (contains PII, never commit)
+/data/
+
 # Common ignores
 node_modules
 .next/
 .DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo

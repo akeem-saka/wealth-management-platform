@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Check } from "lucide-react"
+import { useState, type FormEvent } from "react"
+import { Check, Loader2, Sparkles } from "lucide-react"
+import { suggestionsByInvestorType } from "@/lib/investment-suggestions"
 
 const investorTypes = [
   "Private Wealth",
@@ -13,6 +14,40 @@ const investorTypes = [
 export function ContactCta() {
   const [submitted, setSubmitted] = useState(false)
   const [type, setType] = useState(investorTypes[0])
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [message, setMessage] = useState("")
+  const [company, setCompany] = useState("")
+  const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle")
+  const [error, setError] = useState<string | null>(null)
+  const suggestion = suggestionsByInvestorType[type]
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setStatus("submitting")
+    setError(null)
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, investorType: type, message, company }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.")
+        setStatus("error")
+        return
+      }
+
+      setStatus("idle")
+      setSubmitted(true)
+    } catch {
+      setError("Something went wrong. Please check your connection and try again.")
+      setStatus("error")
+    }
+  }
 
   return (
     <section id="contact" className="bg-primary text-primary-foreground">
@@ -53,16 +88,38 @@ export function ContactCta() {
               </p>
             </div>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                setSubmitted(true)
-              }}
-              className="space-y-5"
-            >
+            <form onSubmit={handleSubmit} className="relative space-y-5">
+              {/* Honeypot — hidden from real users via CSS, bots that autofill it get caught server-side. */}
+              <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+                <label htmlFor="company">Company</label>
+                <input
+                  id="company"
+                  name="company"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                />
+              </div>
+
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Full name" id="name" placeholder="Jane Doe" />
-                <Field label="Email" id="email" type="email" placeholder="jane@example.com" />
+                <Field
+                  label="Full name"
+                  id="name"
+                  placeholder="Jane Doe"
+                  value={name}
+                  onChange={setName}
+                  required
+                />
+                <Field
+                  label="Email"
+                  id="email"
+                  type="email"
+                  placeholder="jane@example.com"
+                  value={email}
+                  onChange={setEmail}
+                  required
+                />
               </div>
 
               <div>
@@ -87,6 +144,26 @@ export function ContactCta() {
                 </div>
               </div>
 
+              {suggestion && (
+                <div className="rounded-md border border-accent/30 bg-accent/10 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-accent">
+                    <Sparkles className="h-4 w-4" />
+                    Suggested for you: {suggestion.headline}
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {suggestion.services.map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-full border border-primary-foreground/20 px-2.5 py-0.5 text-xs text-primary-foreground/80"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2.5 text-xs leading-relaxed text-primary-foreground/60">{suggestion.note}</p>
+                </div>
+              )}
+
               <div>
                 <label
                   htmlFor="message"
@@ -98,18 +175,29 @@ export function ContactCta() {
                   id="message"
                   rows={3}
                   placeholder="Briefly describe your goals…"
+                  required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className="w-full rounded-md border border-primary-foreground/20 bg-primary-foreground/5 px-3 py-2.5 text-sm text-primary-foreground placeholder:text-primary-foreground/40 focus:border-primary-foreground/60 focus:outline-none"
                 />
               </div>
 
+              {error && (
+                <p role="alert" className="text-sm text-red-300">
+                  {error}
+                </p>
+              )}
+
               <button
                 type="submit"
-                className="w-full rounded-md bg-primary-foreground px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary-foreground/90"
+                disabled={status === "submitting"}
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-primary-foreground px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary-foreground/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Request Consultation
+                {status === "submitting" && <Loader2 className="h-4 w-4 animate-spin" />}
+                {status === "submitting" ? "Sending…" : "Request Consultation"}
               </button>
               <p className="text-center text-xs text-primary-foreground/50">
-                This is a demonstration form. No data is transmitted or stored.
+                Your information is sent securely to our advisory team.
               </p>
             </form>
           )}
@@ -124,11 +212,17 @@ function Field({
   id,
   type = "text",
   placeholder,
+  value,
+  onChange,
+  required,
 }: {
   label: string
   id: string
   type?: string
   placeholder?: string
+  value: string
+  onChange: (value: string) => void
+  required?: boolean
 }) {
   return (
     <div>
@@ -139,6 +233,9 @@ function Field({
         id={id}
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
         className="w-full rounded-md border border-primary-foreground/20 bg-primary-foreground/5 px-3 py-2.5 text-sm text-primary-foreground placeholder:text-primary-foreground/40 focus:border-primary-foreground/60 focus:outline-none"
       />
     </div>

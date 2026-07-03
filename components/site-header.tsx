@@ -37,7 +37,7 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/portal"
+            href="/login"
             className="text-sm font-medium text-foreground transition-colors hover:text-primary"
           >
             Client Login
@@ -76,7 +76,7 @@ export function SiteHeader() {
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-border/60 pt-3">
               <Link
-                href="/portal"
+                href="/login"
                 className="rounded-md px-2 py-2.5 text-sm font-medium text-foreground"
               >
                 Client Login

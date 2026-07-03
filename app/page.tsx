@@ -6,6 +6,7 @@ import { TrackRecord } from "@/components/track-record"
 import { Insights } from "@/components/insights"
 import { ContactCta } from "@/components/contact-cta"
 import { SiteFooter } from "@/components/site-footer"
+import { SiteChatWidget } from "@/components/site-chat-widget"
 
 export default function HomePage() {
   return (
@@ -20,6 +21,7 @@ export default function HomePage() {
         <ContactCta />
       </main>
       <SiteFooter />
+      <SiteChatWidget />
     </div>
   )
 }
